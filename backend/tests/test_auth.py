@@ -70,3 +70,37 @@ def test_auth_lifecycle():
         headers={"Authorization": f"Bearer {signin_token}"},
     )
     assert post_logout_me.status_code == 401
+
+
+def test_google_auth():
+    google_email = f"google_{uuid.uuid4().hex[:8]}@gmail.com"
+    name = "Google Tester"
+
+    # 1. Sign in with Google (first time = signup)
+    res = client.post(
+        "/api/v1/auth/google",
+        json={"email": google_email, "full_name": name},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "token" in data
+    assert data["user"]["email"] == google_email
+    assert data["user"]["full_name"] == name
+    first_token = data["token"]
+
+    # 2. Verify token with /me
+    me_res = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {first_token}"},
+    )
+    assert me_res.status_code == 200
+    assert me_res.json()["email"] == google_email
+
+    # 3. Subsequent sign in with Google (existing user) returns new session token
+    res2 = client.post(
+        "/api/v1/auth/google",
+        json={"email": google_email, "full_name": name},
+    )
+    assert res2.status_code == 200
+    assert res2.json()["user"]["email"] == google_email
+

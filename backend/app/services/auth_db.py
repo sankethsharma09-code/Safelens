@@ -190,3 +190,52 @@ def revoke_token(token: str) -> None:
             conn.execute("DELETE FROM user_tokens WHERE token = ?", (clean_token,))
     finally:
         conn.close()
+
+
+def get_or_create_google_user(email: str, full_name: str | None = None) -> dict:
+    """Gets existing user by Google email or creates a new one, returning a session token."""
+    clean_email = email.strip().lower()
+    clean_name = (full_name or "").strip() or clean_email.split("@")[0]
+    now = datetime.now(timezone.utc).isoformat()
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.execute(
+            "SELECT id, email, full_name, created_at FROM users WHERE email = ?",
+            (clean_email,),
+        )
+        row = cursor.fetchone()
+        if row:
+            user_id = row["id"]
+            user_email = row["email"]
+            user_name = row["full_name"] or clean_name
+            created_at = row["created_at"]
+        else:
+            user_id = str(uuid.uuid4())
+            random_pw = secrets.token_urlsafe(32)
+            pw_hash, pw_salt = hash_password(random_pw)
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO users (id, email, full_name, password_hash, password_salt, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (user_id, clean_email, clean_name, pw_hash, pw_salt, now),
+                )
+            user_email = clean_email
+            user_name = clean_name
+            created_at = now
+    finally:
+        conn.close()
+
+    token = create_user_token(user_id)
+    return {
+        "token": token,
+        "user": {
+            "id": user_id,
+            "email": user_email,
+            "full_name": user_name,
+            "created_at": created_at,
+        },
+    }
+

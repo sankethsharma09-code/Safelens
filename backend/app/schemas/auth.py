@@ -38,3 +38,9 @@ class UserProfile(BaseModel):
 class AuthResponse(BaseModel):
     token: str
     user: UserProfile
+
+
+class GoogleAuthRequest(BaseModel):
+    credential: str | None = Field(default=None, description="Google ID Token from Google Identity Services")
+    email: str | None = Field(default=None, description="Email address for Google user")
+    full_name: str | None = Field(default=None, description="Full name or display name from Google profile")

@@ -1,6 +1,6 @@
 from .scan import ScanRequest, ScanResponse, ScanItemInput, ExtractedItemResult, OverallVerdict, Flag
 from .device import DeviceRegisterRequest, DeviceRegisterResponse
-from .auth import SignUpRequest, SignInRequest, UserProfile, AuthResponse
+from .auth import SignUpRequest, SignInRequest, UserProfile, AuthResponse, GoogleAuthRequest
 
 __all__ = [
     "ScanRequest",
@@ -15,4 +15,5 @@ __all__ = [
     "SignInRequest",
     "UserProfile",
     "AuthResponse",
+    "GoogleAuthRequest",
 ]

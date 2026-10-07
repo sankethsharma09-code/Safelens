@@ -30,6 +30,12 @@ export interface SignInPayload {
   password: string;
 }
 
+export interface GoogleAuthPayload {
+  credential?: string;
+  email?: string;
+  full_name?: string;
+}
+
 // Local storage session keys
 const TOKEN_KEY = 'safelens-auth-token';
 const USER_KEY = 'safelens-user-profile';
@@ -143,6 +149,28 @@ export async function signInApi(payload: SignInPayload): Promise<AuthResponse> {
   saveAuthSession(data);
   return data;
 }
+
+export async function signInWithGoogleApi(payload: GoogleAuthPayload): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const message = errorBody.detail || errorBody.error || `Google authentication failed (${response.status})`;
+    throw new Error(typeof message === 'string' ? message : JSON.stringify(message));
+  }
+
+  const data = (await response.json()) as AuthResponse;
+  saveAuthSession(data);
+  return data;
+}
+
 
 export async function logoutApi(): Promise<void> {
   const { token } = getStoredAuth();

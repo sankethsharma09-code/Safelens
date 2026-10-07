@@ -2497,3 +2497,220 @@ code {
   color: #7e22ce;
 }
 
+/* Google Authentication Button */
+.btn-google-auth {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.btn-google-auth:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.btn-google-auth:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Auth Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0 14px;
+  gap: 12px;
+}
+
+.auth-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.auth-divider-text {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Inline Google Direct Dialog */
+.google-dialog-card {
+  margin: 12px 0 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(66, 133, 244, 0.4);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  animation: fadeInBackdrop 0.2s ease-out;
+}
+
+.google-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.google-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.google-dialog-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.google-dialog-close:hover {
+  color: #ffffff;
+}
+
+.google-dialog-desc {
+  font-size: 0.77rem;
+  color: #cbd5e1;
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+.google-dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.google-dialog-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 0.84rem;
+  box-sizing: border-box;
+}
+
+.google-dialog-input:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.25);
+}
+
+.google-dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-google-submit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #1a73e8;
+  border: 1px solid #4285f4;
+  color: #ffffff;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-google-submit:hover:not(:disabled) {
+  background: #1557b0;
+}
+
+.btn-google-demo {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-google-demo:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+/* Light Mode Overrides for Google Authentication */
+:root.light .btn-google-auth {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+:root.light .btn-google-auth:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+:root.light .auth-divider-line {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:root.light .auth-divider-text {
+  color: #64748b;
+}
+
+:root.light .google-dialog-card {
+  background: #f8fafc;
+  border-color: rgba(66, 133, 244, 0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+:root.light .google-dialog-title {
+  color: #0f172a;
+}
+
+:root.light .google-dialog-desc {
+  color: #475569;
+}
+
+:root.light .google-dialog-input {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+:root.light .btn-google-demo {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+

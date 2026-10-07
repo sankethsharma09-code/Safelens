@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     VIRUSTOTAL_API_KEY: str | None = None
     LLM_API_KEY: str | None = None
 
+    # Google OAuth / Sign In (Optional)
+    GOOGLE_CLIENT_ID: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
