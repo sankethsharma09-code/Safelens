@@ -8,7 +8,8 @@
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "preview": "npm --prefix frontend run preview",
-    "electron": "electron electron/main.cjs"
+    "electron": "electron electron/main.cjs",
+    "app": "electron electron/main.cjs"
   },
   "devDependencies": {
     "electron": "^44.6.0"

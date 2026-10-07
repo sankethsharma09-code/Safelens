@@ -21,15 +21,41 @@ let currentDisplayInfo = null;
 
 const DEV_SERVER_URL = 'http://localhost:5173';
 
-function getAppUrl(queryParams = '') {
-  const distPath = path.join(__dirname, '../frontend/dist/index.html');
-  if (app.isPackaged || !fs.existsSync(path.join(__dirname, '../frontend/src'))) {
-    return `file://${distPath}${queryParams}`;
+async function isDevServerRunning() {
+  try {
+    const res = await fetch(DEV_SERVER_URL, { signal: AbortSignal.timeout(500) });
+    return res.ok || res.status < 500;
+  } catch {
+    return false;
   }
-  return `${DEV_SERVER_URL}${queryParams}`;
 }
 
-function createMainWindow() {
+async function loadWindow(win, query = {}) {
+  const isDev = await isDevServerRunning();
+  const distPath = path.join(__dirname, '../frontend/dist/index.html');
+
+  if (isDev) {
+    const qs = new URLSearchParams(query).toString();
+    const url = qs ? `${DEV_SERVER_URL}/?${qs}` : `${DEV_SERVER_URL}/`;
+    console.log(`[SafeLens Main] Connecting to active Vite dev server at ${url}`);
+    try {
+      await win.loadURL(url);
+      return;
+    } catch (err) {
+      console.warn('[SafeLens Main] Dev server unreachable, falling back to dist:', err.message);
+    }
+  }
+
+  // Standalone mode: load pre-built production dist directly
+  if (fs.existsSync(distPath)) {
+    console.log('[SafeLens Main] Loading standalone dist bundle');
+    await win.loadFile(distPath, { query });
+  } else {
+    console.error('[SafeLens Main] dist/index.html not found! Please run `npm run build` first.');
+  }
+}
+
+async function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
@@ -44,14 +70,7 @@ function createMainWindow() {
     },
   });
 
-  const url = getAppUrl();
-  mainWindow.loadURL(url).catch(() => {
-    // Fallback to local dist if dev server is unreachable
-    const distPath = path.join(__dirname, '../frontend/dist/index.html');
-    if (fs.existsSync(distPath)) {
-      mainWindow.loadFile(distPath);
-    }
-  });
+  await loadWindow(mainWindow);
 
   // Hide window instead of closing when user clicks 'X' (run as tray app)
   mainWindow.on('close', (event) => {
@@ -69,7 +88,7 @@ function createMainWindow() {
  * frameless, transparent, alwaysOnTop with level 'screen-saver', skipTaskbar,
  * covering the display under the cursor, visible on all workspaces.
  */
-function createOverlayWindow() {
+async function createOverlayWindow() {
   overlayWindow = new BrowserWindow({
     show: false,
     frame: false,
@@ -93,13 +112,7 @@ function createOverlayWindow() {
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  const overlayUrl = getAppUrl('?overlay=true');
-  overlayWindow.loadURL(overlayUrl).catch(() => {
-    const distPath = path.join(__dirname, '../frontend/dist/index.html');
-    if (fs.existsSync(distPath)) {
-      overlayWindow.loadFile(distPath, { query: { overlay: 'true' } });
-    }
-  });
+  await loadWindow(overlayWindow, { overlay: 'true' });
 
   // Never destroy overlay window on close; hide it
   overlayWindow.on('close', (event) => {
@@ -165,7 +178,7 @@ async function triggerSnip() {
     overlayWindow.setBounds(currentDisplay.bounds);
 
     // Send the captured image and display metadata to overlay
-    overlayWindow.webContents.send('snip:display-capture', {
+    const payload = {
       dataUrl: screenshotDataUrl,
       display: {
         id: currentDisplay.id,
@@ -173,11 +186,21 @@ async function triggerSnip() {
         scaleFactor: scaleFactor,
         size: currentDisplay.size,
       },
-    });
+    };
 
-    // 2. Show and focus overlay window so Esc and drag work
+    if (overlayWindow.webContents.isLoading()) {
+      overlayWindow.webContents.once('did-finish-load', () => {
+        overlayWindow.webContents.send('snip:display-capture', payload);
+      });
+    } else {
+      overlayWindow.webContents.send('snip:display-capture', payload);
+    }
+
+    // 2. Show, focus, and force top level so Esc and drag work over any application
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     overlayWindow.show();
     overlayWindow.focus();
+    overlayWindow.moveTop();
 
     // Log step 3: Overlay shown
     console.log('[SafeLens Main] Overlay shown and focused');
@@ -317,15 +340,15 @@ ipcMain.on('snip:crop-selected', (event, { rect, display }) => {
 });
 
 // App Lifecycle
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createTray();
-  createMainWindow();
-  createOverlayWindow();
+  await createMainWindow();
+  await createOverlayWindow();
   registerGlobalHotkeys();
 
-  app.on('activate', () => {
+  app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
+      await createMainWindow();
     } else if (mainWindow) {
       mainWindow.show();
     }

@@ -64,9 +64,14 @@ export function App() {
 
   // Synchronize theme attribute on HTML root
   useEffect(() => {
+    if (isOverlayMode) {
+      document.documentElement.style.background = 'transparent';
+      document.body.style.background = 'transparent';
+      return;
+    }
     document.documentElement.classList.remove('dark', 'light');
     document.documentElement.classList.add(theme);
-  }, [theme]);
+  }, [theme, isOverlayMode]);
 
   const handleToggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';

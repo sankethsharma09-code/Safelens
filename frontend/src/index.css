@@ -796,6 +796,12 @@ button, input, select {
   background: transparent !important;
 }
 
+body:has(.overlay-window-root),
+html:has(.overlay-window-root) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .snip-overlay-header {
   position: absolute;
   top: 24px;
