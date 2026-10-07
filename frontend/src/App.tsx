@@ -9,6 +9,7 @@ import { Toast } from './components/Toast';
 import { SCENARIOS } from './data/mockScans';
 import type { Scenario } from './data/mockScans';
 import type { ScanResult } from './types';
+import { submitScan } from './services/api';
 import { Crosshair } from 'lucide-react';
 
 export function App() {
@@ -62,15 +63,26 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleScenarioSelected = (scenario: Scenario) => {
+  const handleScenarioSelected = async (scenario: Scenario) => {
     setIsPanelOpen(true);
     setIsAnalyzing(true);
     setScanResult(null);
 
-    setTimeout(() => {
+    // Extract item payload for backend analysis
+    const primaryItem = scenario.result.items[0];
+    const itemKind: 'qr' | 'text' = primaryItem?.kind === 'qr' ? 'qr' : 'text';
+    const itemValue = primaryItem?.value || scenario.previewText;
+
+    try {
+      const liveResult = await submitScan([{ kind: itemKind, value: itemValue }]);
+      setScanResult(liveResult);
+      showToast('Live backend analysis completed');
+    } catch {
+      // Fallback gracefully to offline scenario mock if backend is starting or offline
       setScanResult(scenario.result);
+    } finally {
       setIsAnalyzing(false);
-    }, 600);
+    }
   };
 
   const handleSnipComplete = (scenario?: Scenario) => {
