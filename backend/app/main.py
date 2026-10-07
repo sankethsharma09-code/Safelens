@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from app.config import get_settings
-from app.routers import scan_router, devices_router
+from app.routers import scan_router, devices_router, auth_router
+from app.services.auth_db import init_auth_db
 
 settings = get_settings()
 
@@ -12,6 +13,9 @@ app = FastAPI(
     description="On-device QR code and Text scam/phishing analysis backend",
     version="0.1.0",
 )
+
+# Initialize Auth database tables
+init_auth_db()
 
 # Enable CORS for desktop clients & Vite dev server
 app.add_middleware(
@@ -42,6 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Include Routers
 app.include_router(scan_router)
 app.include_router(devices_router)
+app.include_router(auth_router)
 
 
 @app.get("/health", tags=["Health"])

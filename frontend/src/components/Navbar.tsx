@@ -1,5 +1,6 @@
 import type { FC } from 'react';
-import { ShieldAlert, Sun, Moon, Zap } from 'lucide-react';
+import { ShieldAlert, Sun, Moon, Zap, LogIn, LogOut } from 'lucide-react';
+import type { AuthUser } from '../services/api';
 
 interface NavbarProps {
   onOpenSnip: () => void;
@@ -7,6 +8,9 @@ interface NavbarProps {
   onNavigateHome?: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  user: AuthUser | null;
+  onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: FC<NavbarProps> = ({
@@ -15,6 +19,9 @@ export const Navbar: FC<NavbarProps> = ({
   onNavigateHome,
   theme,
   onToggleTheme,
+  user,
+  onOpenAuth,
+  onLogout,
 }) => {
   return (
     <header className="nav-header">
@@ -80,8 +87,37 @@ export const Navbar: FC<NavbarProps> = ({
         </li>
       </ul>
 
-      {/* Right Side: Color Mode Switch & Pill Button */}
+      {/* Right Side: Auth, Color Mode Switch & Pill Button */}
       <div className="nav-actions">
+        {/* User Authentication Status */}
+        {user ? (
+          <div className="nav-user-chip" title={`Signed in as ${user.email}`}>
+            <div className="nav-user-avatar">
+              {user.full_name ? user.full_name[0].toUpperCase() : user.email[0].toUpperCase()}
+            </div>
+            <span className="nav-user-name">
+              {user.full_name || user.email.split('@')[0]}
+            </span>
+            <button
+              className="nav-logout-btn"
+              onClick={onLogout}
+              title="Sign Out of SafeLens"
+              aria-label="Sign Out"
+            >
+              <LogOut size={13} />
+            </button>
+          </div>
+        ) : (
+          <button
+            className="btn-nav-auth"
+            onClick={onOpenAuth}
+            title="Sign in or create an account"
+          >
+            <LogIn size={14} />
+            <span>Sign In</span>
+          </button>
+        )}
+
         {/* Color Mode Switch (Dark / Light) */}
         <button
           className="theme-toggle-btn"

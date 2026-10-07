@@ -6,10 +6,12 @@ import { SandboxScenarios } from './components/SandboxScenarios';
 import { SnipOverlay } from './components/SnipOverlay';
 import { ResultsPanel } from './components/ResultsPanel';
 import { Toast } from './components/Toast';
+import { AuthModal } from './components/AuthModal';
 import { SCENARIOS } from './data/mockScans';
 import type { Scenario } from './data/mockScans';
 import type { ScanResult } from './types';
-import { submitScan } from './services/api';
+import { submitScan, getStoredAuth, logoutApi } from './services/api';
+import type { AuthUser } from './services/api';
 import { Crosshair } from 'lucide-react';
 
 export function App() {
@@ -20,6 +22,10 @@ export function App() {
     }
     return 'dark';
   });
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    return getStoredAuth().user;
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSnipOverlayOpen, setIsSnipOverlayOpen] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -31,6 +37,17 @@ export function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 2800);
+  };
+
+  const handleAuthSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    showToast(`Welcome, ${user.full_name || user.email}!`);
+  };
+
+  const handleLogout = async () => {
+    await logoutApi();
+    setCurrentUser(null);
+    showToast('Signed out successfully.');
   };
 
   const triggerSnipSession = () => {
@@ -106,6 +123,9 @@ export function App() {
           onOpenPanel={() => setIsPanelOpen(true)}
           theme={theme}
           onToggleTheme={handleToggleTheme}
+          user={currentUser}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -150,6 +170,13 @@ export function App() {
         isAnalyzing={isAnalyzing}
         scanResult={scanResult}
         onShowToast={showToast}
+      />
+
+      {/* Sign In / Sign Up Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
 
       {/* Feedback Toast */}
