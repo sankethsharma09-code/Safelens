@@ -1,0 +1,113 @@
+import type { FC } from 'react';
+import { ShieldAlert, Sun, Moon, Zap } from 'lucide-react';
+
+interface NavbarProps {
+  onOpenSnip: () => void;
+  onOpenPanel: () => void;
+  onNavigateHome?: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+}
+
+export const Navbar: FC<NavbarProps> = ({
+  onOpenSnip,
+  onOpenPanel,
+  onNavigateHome,
+  theme,
+  onToggleTheme,
+}) => {
+  return (
+    <header className="nav-header">
+      {/* Brand logo */}
+      <a
+        href="#"
+        className="nav-brand"
+        onClick={(e) => {
+          e.preventDefault();
+          onNavigateHome?.();
+        }}
+      >
+        <div className="nav-brand-icon">
+          <ShieldAlert size={20} color="#fff" />
+        </div>
+        <span>SafeLens</span>
+      </a>
+
+      {/* Center Nav Links */}
+      <ul className="nav-links">
+        <li>
+          <a
+            href="#home"
+            className="nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome?.();
+            }}
+          >
+            Home
+          </a>
+        </li>
+        <li>
+          <a
+            href="#pipeline"
+            className="nav-link"
+            onClick={() => {
+              onNavigateHome?.();
+            }}
+          >
+            How It Works
+          </a>
+        </li>
+        <li>
+          <a
+            href="#sandbox"
+            className="nav-link"
+            onClick={() => {
+              onNavigateHome?.();
+            }}
+          >
+            Test Scenarios
+          </a>
+        </li>
+        <li>
+          <button
+            onClick={onOpenPanel}
+            className="nav-link"
+            style={{ background: 'none', border: 'none', font: 'inherit' }}
+          >
+            Desktop Panel
+          </button>
+        </li>
+      </ul>
+
+      {/* Right Side: Color Mode Switch & Pill Button */}
+      <div className="nav-actions">
+        {/* Color Mode Switch (Dark / Light) */}
+        <button
+          className="theme-toggle-btn"
+          onClick={onToggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label="Toggle Color Mode"
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun size={15} color="#fbbf24" />
+              <span>Light</span>
+            </>
+          ) : (
+            <>
+              <Moon size={15} color="#7e22ce" />
+              <span>Dark</span>
+            </>
+          )}
+        </button>
+
+        {/* Purple Pill Button */}
+        <button className="btn-pill-purple" onClick={onOpenSnip}>
+          <Zap size={14} />
+          <span>Launch Snip</span>
+        </button>
+      </div>
+    </header>
+  );
+};
