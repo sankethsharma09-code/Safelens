@@ -18,6 +18,12 @@ let tray = null;
 let isQuitting = false;
 let currentCapturedImage = null;
 let currentDisplayInfo = null;
+let hasShownTrayBalloon = false;
+
+// Optimization for Linux transparent compositing
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+}
 
 const DEV_SERVER_URL = 'http://localhost:5173';
 
@@ -78,6 +84,20 @@ async function createMainWindow() {
       event.preventDefault();
       mainWindow.hide();
       console.log('[SafeLens Main] Main window hidden to system tray');
+
+      // Windows tray balloon notification on first minimize
+      if (process.platform === 'win32' && tray && !hasShownTrayBalloon) {
+        hasShownTrayBalloon = true;
+        try {
+          tray.displayBalloon({
+            iconType: 'info',
+            title: 'SafeLens is still active',
+            content: 'SafeLens is minimized in your system tray. Press Ctrl+Shift+Space to snip anytime.',
+          });
+        } catch {
+          // Fallback if balloon is not supported by notification settings
+        }
+      }
     }
   });
 }
@@ -89,6 +109,9 @@ async function createMainWindow() {
  * covering the display under the cursor, visible on all workspaces.
  */
 async function createOverlayWindow() {
+  const isMac = process.platform === 'darwin';
+  const isWin = process.platform === 'win32';
+
   overlayWindow = new BrowserWindow({
     show: false,
     frame: false,
@@ -100,6 +123,7 @@ async function createOverlayWindow() {
     resizable: false,
     movable: false,
     focusable: true,
+    type: isMac ? 'panel' : (process.platform === 'linux' ? 'toolbar' : undefined),
     backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -108,8 +132,12 @@ async function createOverlayWindow() {
     },
   });
 
-  // Set always-on-top level to 'screen-saver' and make visible across all workspaces
-  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  // Set always-on-top level and make visible across all virtual workspaces / desktops
+  if (isMac || isWin) {
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  } else {
+    overlayWindow.setAlwaysOnTop(true);
+  }
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
   await loadWindow(overlayWindow, { overlay: 'true' });
@@ -145,6 +173,17 @@ async function triggerSnip() {
     const thumbWidth = Math.round(currentDisplay.size.width * scaleFactor);
     const thumbHeight = Math.round(currentDisplay.size.height * scaleFactor);
 
+    // macOS Screen Recording permission check
+    if (process.platform === 'darwin') {
+      const { systemPreferences } = require('electron');
+      if (systemPreferences && typeof systemPreferences.getMediaAccessStatus === 'function') {
+        const status = systemPreferences.getMediaAccessStatus('screen');
+        if (status !== 'granted') {
+          console.warn('[SafeLens Main] macOS Screen Recording permission status:', status);
+        }
+      }
+    }
+
     // 1. Capture the screen with desktopCapturer FIRST
     const sources = await desktopCapturer.getSources({
       types: ['screen'],
@@ -153,7 +192,7 @@ async function triggerSnip() {
     });
 
     if (!sources || sources.length === 0) {
-      console.error('[SafeLens Main] desktopCapturer found no screen sources');
+      console.error('[SafeLens Main] desktopCapturer found no screen sources (check OS permissions on macOS/Wayland)');
       return;
     }
 
@@ -225,8 +264,17 @@ function createTray() {
     );
   }
 
+  // macOS menu bar adaptation: template images dynamically adapt to Dark/Light menu bar
+  if (process.platform === 'darwin' && icon && typeof icon.setTemplateImage === 'function') {
+    icon.setTemplateImage(true);
+  }
+
   tray = new Tray(icon);
   tray.setToolTip('SafeLens - Scam & Phishing Protection');
+
+  const isMac = process.platform === 'darwin';
+  const hotkeyLabel = isMac ? 'Cmd+Shift+Space' : 'Ctrl+Shift+Space';
+  const startAtLogin = app.getLoginItemSettings().openAtLogin;
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -239,9 +287,23 @@ function createTray() {
       },
     },
     {
-      label: 'Snip Screen (Ctrl+Shift+Space)',
+      label: `Snip Screen (${hotkeyLabel})`,
+      accelerator: 'CommandOrControl+Shift+Space',
       click: () => {
         triggerSnip();
+      },
+    },
+    { type: 'separator' },
+    {
+      label: isMac ? 'Launch at Login' : 'Start with Windows',
+      type: 'checkbox',
+      checked: startAtLogin,
+      click: (menuItem) => {
+        app.setLoginItemSettings({
+          openAtLogin: menuItem.checked,
+          openAsHidden: true,
+        });
+        console.log(`[SafeLens Main] Auto-start on boot set to: ${menuItem.checked}`);
       },
     },
     { type: 'separator' },
@@ -256,7 +318,7 @@ function createTray() {
 
   tray.setContextMenu(contextMenu);
 
-  tray.on('click', () => {
+  const toggleMainWindow = () => {
     if (mainWindow) {
       if (mainWindow.isVisible()) {
         mainWindow.focus();
@@ -264,7 +326,10 @@ function createTray() {
         mainWindow.show();
       }
     }
-  });
+  };
+
+  tray.on('click', toggleMainWindow);
+  tray.on('double-click', toggleMainWindow);
 }
 
 /**

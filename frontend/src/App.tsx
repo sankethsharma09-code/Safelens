@@ -19,6 +19,11 @@ export function App() {
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('overlay') === 'true';
 
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPod|iPhone|iPad/.test(navigator.userAgent || navigator.platform || '');
+  const hotkeyDisplay = isMac ? '⌘+Shift+Space' : 'Ctrl+Shift+Space';
+
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('safelens-theme') as 'dark' | 'light' | null;
@@ -200,10 +205,10 @@ export function App() {
         <button
           onClick={triggerSnipSession}
           className="floating-snip-btn"
-          title="Press Ctrl+Shift+Space or Click to Snip"
+          title={`Press ${hotkeyDisplay} or Click to Snip`}
         >
           <Crosshair size={16} />
-          <span>Snip Tool (Ctrl+Shift+Space)</span>
+          <span>Snip Tool ({hotkeyDisplay})</span>
         </button>
       </div>
 
