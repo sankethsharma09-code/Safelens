@@ -12,14 +12,14 @@ export const Hero: FC<HeroProps> = ({ onStartSnip }) => {
       {/* Pill badge matching scoped features */}
       <div className="pill-badge" onClick={onStartSnip}>
         <span className="badge-tag">Scoped MVP</span>
-        <span>Dedicated QR Code Scanner & Text Scam Analyzer</span>
-        <ArrowRight size={13} style={{ marginLeft: 2 }} />
+        <span className="badge-title">Dedicated QR Code Scanner & Text Scam Analyzer</span>
+        <ArrowRight size={13} style={{ marginLeft: 2 }} className="badge-arrow" />
       </div>
 
       {/* Main Headline */}
       <h1 className="hero-title">
         Snip QR Codes & Text.
-        <br />
+        <br className="desktop-break" />
         Detect Scams Instantly.
       </h1>
 

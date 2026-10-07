@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import type { FC } from 'react';
-import { ShieldAlert, Sun, Moon, Zap, LogIn, LogOut } from 'lucide-react';
+import { ShieldAlert, Sun, Moon, Zap, LogIn, LogOut, Menu, X } from 'lucide-react';
 import type { AuthUser } from '../services/api';
 
 interface NavbarProps {
@@ -23,6 +24,8 @@ export const Navbar: FC<NavbarProps> = ({
   onOpenAuth,
   onLogout,
 }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <header className="nav-header">
       {/* Brand logo */}
@@ -128,12 +131,12 @@ export const Navbar: FC<NavbarProps> = ({
           {theme === 'dark' ? (
             <>
               <Sun size={15} color="#fbbf24" />
-              <span>Light</span>
+              <span className="theme-toggle-text">Light</span>
             </>
           ) : (
             <>
               <Moon size={15} color="#7e22ce" />
-              <span>Dark</span>
+              <span className="theme-toggle-text">Dark</span>
             </>
           )}
         </button>
@@ -141,9 +144,65 @@ export const Navbar: FC<NavbarProps> = ({
         {/* Purple Pill Button */}
         <button className="btn-pill-purple" onClick={onOpenSnip}>
           <Zap size={14} />
-          <span>Launch Snip</span>
+          <span className="btn-pill-text">Launch Snip</span>
+        </button>
+
+        {/* Mobile Hamburger Toggle */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+          title="Toggle Navigation Menu"
+        >
+          {isMobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
         </button>
       </div>
+
+      {/* Mobile Navigation Dropdown Menu */}
+      {isMobileMenuOpen && (
+        <div className="mobile-dropdown-menu">
+          <a
+            href="#home"
+            className="mobile-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsMobileMenuOpen(false);
+              onNavigateHome?.();
+            }}
+          >
+            Home
+          </a>
+          <a
+            href="#pipeline"
+            className="mobile-nav-link"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              onNavigateHome?.();
+            }}
+          >
+            How It Works
+          </a>
+          <a
+            href="#sandbox"
+            className="mobile-nav-link"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              onNavigateHome?.();
+            }}
+          >
+            Test Scenarios
+          </a>
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              onOpenPanel();
+            }}
+            className="mobile-nav-link mobile-nav-btn"
+          >
+            Desktop Panel
+          </button>
+        </div>
+      )}
     </header>
   );
 };
