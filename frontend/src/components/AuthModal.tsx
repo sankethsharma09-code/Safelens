@@ -54,14 +54,15 @@ export const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showGoogleDialog, setShowGoogleDialog] = useState(false);
+  const [showCustomEmail, setShowCustomEmail] = useState(false);
   const [googleEmailInput, setGoogleEmailInput] = useState('');
-  const [googleNameInput, setGoogleNameInput] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const switchMode = (newMode: 'signin' | 'signup') => {
     setMode(newMode);
     setErrorMessage(null);
     setShowGoogleDialog(false);
+    setShowCustomEmail(false);
   };
 
   // Handle Escape key to dismiss modal
@@ -278,7 +279,7 @@ export const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }
               <div className="google-dialog-header">
                 <div className="google-dialog-title">
                   <GoogleIcon size={16} />
-                  <span>Google Account Authentication</span>
+                  <span>Choose an account</span>
                 </div>
                 <button
                   type="button"
@@ -291,52 +292,90 @@ export const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }
               </div>
 
               <p className="google-dialog-desc">
-                Sign in with your Google address to authenticate or create your profile instantly:
+                Select your account to continue to <strong>SafeLens Security</strong>:
               </p>
 
-              <div className="google-dialog-fields">
-                <input
-                  type="email"
-                  className="google-dialog-input"
-                  placeholder="your.email@gmail.com"
-                  value={googleEmailInput}
-                  onChange={(e) => setGoogleEmailInput(e.target.value)}
-                  autoFocus
-                />
-                <input
-                  type="text"
-                  className="google-dialog-input"
-                  placeholder="Full Name (optional)"
-                  value={googleNameInput}
-                  onChange={(e) => setGoogleNameInput(e.target.value)}
-                />
-              </div>
-
-              <div className="google-dialog-actions">
+              <div className="google-accounts-list">
                 <button
                   type="button"
-                  className="btn-google-submit"
+                  className="google-account-item"
                   disabled={isGoogleLoading}
                   onClick={() =>
-                    handleExecuteGoogleSign(
-                      googleEmailInput.trim() || 'user@gmail.com',
-                      googleNameInput.trim()
-                    )
+                    handleExecuteGoogleSign('sankethsharma09@gmail.com', 'Sanketh Sharma')
                   }
                 >
-                  <GoogleIcon size={14} />
-                  <span>{isGoogleLoading ? 'Signing In...' : 'Sign In with Google'}</span>
+                  <div className="google-avatar-circle" style={{ background: 'linear-gradient(135deg, #4285f4, #1a73e8)' }}>
+                    S
+                  </div>
+                  <div className="google-account-details">
+                    <span className="google-account-name">Sanketh Sharma</span>
+                    <span className="google-account-email">sankethsharma09@gmail.com</span>
+                  </div>
                 </button>
+
                 <button
                   type="button"
-                  className="btn-google-demo"
+                  className="google-account-item"
                   disabled={isGoogleLoading}
                   onClick={() =>
                     handleExecuteGoogleSign('demo.security@gmail.com', 'Google Demo User')
                   }
                 >
-                  Use Demo Account
+                  <div className="google-avatar-circle" style={{ background: 'linear-gradient(135deg, #34a853, #1e8e3e)' }}>
+                    G
+                  </div>
+                  <div className="google-account-details">
+                    <span className="google-account-name">Google Demo User</span>
+                    <span className="google-account-email">demo.security@gmail.com</span>
+                  </div>
                 </button>
+
+                {!showCustomEmail ? (
+                  <button
+                    type="button"
+                    className="google-account-item google-account-item-add"
+                    disabled={isGoogleLoading}
+                    onClick={() => setShowCustomEmail(true)}
+                  >
+                    <div className="google-avatar-circle google-avatar-outline">
+                      <User size={14} />
+                    </div>
+                    <div className="google-account-details">
+                      <span className="google-account-name">Use another Google account</span>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="google-custom-box">
+                    <input
+                      type="email"
+                      className="google-dialog-input"
+                      placeholder="your.email@gmail.com"
+                      value={googleEmailInput}
+                      onChange={(e) => setGoogleEmailInput(e.target.value)}
+                      autoFocus
+                    />
+                    <div className="google-dialog-actions" style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        className="btn-google-submit"
+                        disabled={isGoogleLoading || !googleEmailInput.trim()}
+                        onClick={() =>
+                          handleExecuteGoogleSign(googleEmailInput.trim())
+                        }
+                      >
+                        <GoogleIcon size={14} />
+                        <span>{isGoogleLoading ? 'Signing in...' : 'Sign In'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-google-demo"
+                        onClick={() => setShowCustomEmail(false)}
+                      >
+                        Back
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
