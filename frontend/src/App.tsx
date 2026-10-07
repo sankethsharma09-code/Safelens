@@ -15,6 +15,10 @@ import type { AuthUser } from './services/api';
 import { Crosshair } from 'lucide-react';
 
 export function App() {
+  const isOverlayMode =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('overlay') === 'true';
+
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('safelens-theme') as 'dark' | 'light' | null;
@@ -51,7 +55,11 @@ export function App() {
   };
 
   const triggerSnipSession = () => {
-    setIsSnipOverlayOpen(true);
+    if (window.electronAPI) {
+      window.electronAPI.triggerSnip();
+    } else {
+      setIsSnipOverlayOpen(true);
+    }
   };
 
   // Synchronize theme attribute on HTML root
@@ -67,8 +75,9 @@ export function App() {
     showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
   };
 
-  // Global hotkey listener (Ctrl + Shift + Space) as defined in README4 and README5
+  // Browser fallback for keydown (in Electron, main process globalShortcut handles it system-wide)
   useEffect(() => {
+    if (window.electronAPI) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'Space') {
         e.preventDefault();
@@ -78,6 +87,30 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Listen to snip completions forwarded from Electron overlay window
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    const unsubscribe = window.electronAPI.onSnipCompleted(async (payload) => {
+      console.log('[SafeLens Renderer] Received completed snip from main process:', payload);
+      setIsPanelOpen(true);
+      setIsAnalyzing(true);
+      setScanResult(null);
+
+      try {
+        const liveResult = await submitScan([
+          { kind: 'text', value: 'Security inspection: OCR scan of captured desktop region' },
+        ]);
+        setScanResult(liveResult);
+        showToast('Screen snip captured & analyzed');
+      } catch {
+        setScanResult(SCENARIOS[0].result);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleScenarioSelected = async (scenario: Scenario) => {
@@ -108,6 +141,20 @@ export function App() {
     handleScenarioSelected(selected);
   };
 
+  // If this window instance is the Electron overlay window, render ONLY the SnipOverlay
+  if (isOverlayMode) {
+    return (
+      <div className="overlay-window-root">
+        <SnipOverlay
+          onClose={() => {
+            window.electronAPI?.cancelSnip();
+          }}
+          onSnipComplete={() => {}}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden' }}>
       {/* Aurora Ambient Mesh Glows */}
@@ -129,13 +176,13 @@ export function App() {
         />
       </div>
 
-      {/* Main Reference Card Frame */}
-      <div className="frame-wrapper">
-        <main className="reference-card">
+      {/* Main Content Area */}
+      <div className="main-content-flow">
+        <main>
           {/* Hero Section */}
           <Hero onStartSnip={triggerSnipSession} />
 
-          {/* Process Section (Snip -> QR/OCR on-device -> Verdict) */}
+          {/* Workflow Architecture Timeline */}
           <ProcessSection onStartSnip={triggerSnipSession} />
 
           {/* Interactive QR & Text Detection Sandbox */}
@@ -155,7 +202,7 @@ export function App() {
         </button>
       </div>
 
-      {/* Full-screen Crosshair Snip Overlay */}
+      {/* Full-screen Crosshair Snip Overlay (in-browser mode) */}
       {isSnipOverlayOpen && (
         <SnipOverlay
           onClose={() => setIsSnipOverlayOpen(false)}

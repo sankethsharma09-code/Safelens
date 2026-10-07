@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing & Coverage
+coverage/
+.pytest_cache/
+
+# Production builds
+dist/
+build/
+
+# Environment and secrets
+.env
+.env.local
+*.db
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.log
